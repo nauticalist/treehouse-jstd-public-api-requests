@@ -5,7 +5,7 @@ const searchContainer = document.querySelector('.search-container');
 
 let users;
 let currentUserIndex;
-
+let filteredUsers;
 /**
  * Fetch data and convert it to json from the provided url.
  *
@@ -16,7 +16,7 @@ function fetchData(url) {
     return fetch(url)
         .then(checkStatus)
         .then(response => response.json())
-        .catch(error => console.log("Error occured while processing your request. ", error));
+        .catch(error => console.log("Error occurred while processing your request. ", error));
 
 }
 
@@ -99,7 +99,7 @@ function generateUserModelBox(user) {
     return `
         <div class="modal-container">
             <div class="modal">
-                <button type="button" id="modal-close-btn" class="modal-close-btn"><strong>X</strong></button>
+                <button type="button" id="modal-close-btn" class="modal-close-btn"><strong id="model-close-btn-text">X</strong></button>
                 <div class="modal-info-container">
                     <img class="modal-img" src="${user.picture.large}" alt="profile picture">
                     <h3 id="name" class="modal-name cap">${user.name.first} ${user.name.last}</h3>
@@ -125,7 +125,13 @@ function generateUserModelBox(user) {
  * @param userIndex index of user selected
  */
 function showUserModel(userIndex) {
-    const userModel = generateUserModelBox(users[userIndex]);
+    let userList;
+    if (filteredUsers) {
+        userList = filteredUsers;
+    } else {
+        userList = users;
+    }
+    const userModel = generateUserModelBox(userList[userIndex]);
     body.insertAdjacentHTML('beforeend', userModel);
 }
 
@@ -136,16 +142,22 @@ function showUserModel(userIndex) {
  */
 function toggleUser(event) {
     // show previous user info.
+    let userList;
+    if (filteredUsers) {
+        userList = filteredUsers;
+    } else {
+        userList = users;
+    }
     if (event.target.id === "modal-prev") {
         if (currentUserIndex > 0) {
             currentUserIndex -= 1;
         } else {
             // return to last user
-            currentUserIndex = users.length  - 1;
+            currentUserIndex = userList.length  - 1;
         }
     // shows next user info.
     } else if (event.target.id === "modal-next") {
-        if (currentUserIndex < users.length  - 1) {
+        if (currentUserIndex < userList.length  - 1) {
             currentUserIndex += 1;
         }else {
             // return to first user
@@ -212,7 +224,7 @@ function filterItems(users, query) {
 function searchUsers(searchValue) {
     if (searchValue && validateInput(searchValue)) {
         const list = filterItems(users, searchValue);
-        const filteredUsers = [...list];
+        filteredUsers = [...list];
         if (filteredUsers.length) {
             galleryDiv.innerHTML = '';
             viewUsers(filteredUsers);
@@ -222,6 +234,7 @@ function searchUsers(searchValue) {
 
     } else {
         galleryDiv.innerHTML = '';
+        filteredUsers = users;
         viewUsers(users)
     }
 }
@@ -244,9 +257,9 @@ galleryDiv.addEventListener("click", event => {
 });
 
 // event handler for model interactions
-body.addEventListener('click', function(event) {
+body.addEventListener("click", event => {
     // close model box when clicked to close button and an empty space other than model box
-    if (event.target.id === 'modal-close-btn' || event.target.className === 'modal-container') {
+    if (event.target.id === 'modal-close-btn' || event.target.className === "modal-container" || event.target.id === "model-close-btn-text") {
         closeModal();
     }
     // handle next and previous user buttons
@@ -259,5 +272,5 @@ body.addEventListener('click', function(event) {
 searchContainer.addEventListener("submit", event => {
     event.preventDefault();
     const searchValue = event.target.firstElementChild.value.toLowerCase();
-    searchUsers(searchValue);searchValue
+    searchUsers(searchValue);
 });
